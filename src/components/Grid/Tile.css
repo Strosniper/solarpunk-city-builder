@@ -1,0 +1,174 @@
+.tile {
+  position: relative;
+  width: var(--tile);
+  height: var(--tile);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+/* ---- ground face ---- */
+.tile-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  box-shadow: var(--shadow-tile);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  transition: filter 200ms var(--ease-soft), box-shadow 200ms;
+}
+.t-concrete .tile-face { background: var(--t-concrete); }
+.t-asphalt  .tile-face { background: var(--t-asphalt); }
+.t-soil     .tile-face { background: var(--t-soil); }
+.t-prairie  .tile-face { background: var(--t-prairie); }
+.t-river    .tile-face { background: var(--t-river); }
+
+.tile:hover .tile-face { filter: brightness(1.18); }
+
+/* zone seam tint along the face edge */
+.z-metropolis .tile-face { border-color: rgba(154, 163, 171, 0.25); }
+.z-town .tile-face { border-color: rgba(33, 212, 216, 0.2); }
+.z-prairie .tile-face { border-color: rgba(52, 224, 161, 0.25); }
+
+.soil-veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(52, 224, 161, 0.55), rgba(40, 120, 70, 0.15));
+  mix-blend-mode: screen;
+  transition: opacity 600ms var(--ease-soft);
+}
+
+.river-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  background-size: 250% 250%;
+  animation: shimmer 5s linear infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
+}
+
+/* ---- selection ---- */
+.tile.selected .tile-face {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 0 2px var(--neon-green), 0 0 22px rgba(52, 224, 161, 0.6), var(--shadow-tile);
+  filter: brightness(1.25);
+}
+
+/* ---- mesh coverage ring ---- */
+.mesh-ring {
+  position: absolute;
+  inset: -2px;
+  border: 1.5px dashed;
+  border-radius: 8px;
+  opacity: 0.55;
+  animation: meshPulse 2.4s var(--ease-soft) infinite;
+}
+@keyframes meshPulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.96); }
+  50% { opacity: 0.7; transform: scale(1.02); }
+}
+
+/* ============ STRUCTURES (raised in 3D space) ============ */
+/* the lift holds the 3D translateZ so it never collides with framer-motion's
+   transform on the inner .struct (which animates scale/opacity) */
+.struct-lift {
+  position: absolute;
+  inset: 16%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.struct {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+/* the body fakes vertical mass with stacked shadows */
+.struct-body {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 80%, #fff 10%),
+    color-mix(in srgb, var(--accent) 55%, #0b1410 60%));
+  box-shadow:
+    0 calc(var(--h) * -0.0px) 0 rgba(0, 0, 0, 0.0),
+    0 14px 22px rgba(0, 0, 0, 0.55),
+    0 28px 44px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+}
+
+/* glossy cap / roof garden */
+.struct-cap {
+  position: absolute;
+  inset: 12% 12% 55% 12%;
+  border-radius: 5px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.05));
+  mix-blend-mode: overlay;
+}
+
+.struct.glow .struct-body {
+  box-shadow:
+    0 14px 22px rgba(0, 0, 0, 0.55),
+    0 0 18px var(--accent),
+    0 0 34px color-mix(in srgb, var(--accent) 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.struct.offline { filter: grayscale(0.85) brightness(0.6); }
+.struct.offline .struct-body { border-color: var(--neon-rose); }
+
+/* counter-rotate so the badge faces the camera, not the tilted plane */
+.struct-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotateZ(-45deg) rotateX(-55deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.struct-glyph { font-size: 16px; color: #fff; filter: drop-shadow(0 0 4px var(--accent)); }
+.struct-tier {
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 1px 5px;
+  border-radius: 6px;
+}
+
+.brownout {
+  position: absolute;
+  top: -10px; right: -8px;
+  transform: rotateZ(-45deg) rotateX(-55deg);
+  font-size: 13px;
+  color: var(--neon-rose);
+  filter: drop-shadow(0 0 6px var(--neon-rose));
+  animation: floatPulse 1.4s infinite;
+}
+
+/* a tiny glowing logistics sprite that runs along the relay tile */
+.logi-sprite {
+  position: absolute;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent), 0 0 14px var(--accent);
+  top: 50%; left: 0;
+  animation: logiRun 2.6s linear infinite;
+}
+@keyframes logiRun {
+  0%   { transform: translate(-4px, -50%) rotateZ(-45deg) rotateX(-55deg); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translate(var(--tile), -50%) rotateZ(-45deg) rotateX(-55deg); opacity: 0; }
+}

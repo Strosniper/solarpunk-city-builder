@@ -1,0 +1,45 @@
+.fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+.fx-layer { position: absolute; inset: 0; }
+
+.p-pollen, .p-smog {
+  position: absolute;
+  bottom: -20px;
+  border-radius: 50%;
+  will-change: transform, opacity;
+}
+
+.p-pollen {
+  width: 6px; height: 6px;
+  background: radial-gradient(circle, var(--neon-green-soft), rgba(52, 224, 161, 0.1));
+  box-shadow: 0 0 8px var(--neon-green);
+  animation-name: rise;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+  opacity: 0;
+}
+
+.p-smog {
+  width: 26px; height: 26px;
+  background: radial-gradient(circle, rgba(120, 96, 70, 0.5), rgba(60, 50, 40, 0));
+  filter: blur(2px);
+  animation-name: rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  opacity: 0;
+}
+
+@keyframes rise {
+  0% { transform: translate(0, 0) scale(var(--s, 1)); opacity: 0; }
+  12% { opacity: 0.85; }
+  88% { opacity: 0.7; }
+  100% { transform: translate(var(--drift, 0), -100vh) scale(var(--s, 1)); opacity: 0; }
+}
+
+/* pollen only really glows at night */
+body[data-time="day"] .p-pollen { box-shadow: 0 0 4px var(--neon-green); opacity: 0.5; }

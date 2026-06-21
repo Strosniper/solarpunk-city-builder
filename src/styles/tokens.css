@@ -1,0 +1,78 @@
+/* ============================================================
+   DESIGN TOKENS — single source of truth for the visual system
+   Glassmorphism + Solarpunk neon palette.
+   ============================================================ */
+:root {
+  /* ---- Solarpunk accent ramp ---- */
+  --neon-green: #34e0a1;
+  --neon-green-soft: #6bf0c0;
+  --neon-cyan: #21d4d8;
+  --neon-lime: #b6f24a;
+  --neon-gold: #ffcf5c;
+  --neon-rose: #ff6b8b;
+  --neon-violet: #9a6bff;
+
+  /* ---- Matte glass surfaces (dark mode default) ---- */
+  --glass-bg: rgba(15, 20, 25, 0.70);
+  --glass-bg-strong: rgba(12, 16, 20, 0.86);
+  --glass-bg-faint: rgba(22, 28, 34, 0.45);
+  --glass-stroke: rgba(255, 255, 255, 0.08);
+  --glass-stroke-bright: rgba(255, 255, 255, 0.16);
+  --glass-blur: 14px;
+
+  /* ---- Text ---- */
+  --text-hi: rgba(255, 255, 255, 0.95);
+  --text-mid: rgba(225, 238, 240, 0.66);
+  --text-lo: rgba(200, 215, 220, 0.40);
+
+  /* ---- Ambient world (dark / night-leaning default) ---- */
+  --sky-top: #0a1014;
+  --sky-bottom: #0f1a17;
+  --ground-tint: rgba(20, 40, 34, 0.5);
+
+  /* ---- Terrain fills ---- */
+  --t-concrete: linear-gradient(145deg, #4a4f55, #2c3035);
+  --t-concrete-edge: #1b1e22;
+  --t-asphalt: linear-gradient(145deg, #3a3d44, #23262b);
+  --t-soil: linear-gradient(145deg, #6b4a2f, #432d1c);
+  --t-prairie: linear-gradient(145deg, #3f7d4a, #245733);
+  --t-river: linear-gradient(145deg, #2f8fb0, #1c5d7e);
+
+  /* ---- Depth / elevation ---- */
+  --shadow-tile: 0 6px 10px rgba(0, 0, 0, 0.45);
+  --shadow-build-1: 0 10px 18px rgba(0, 0, 0, 0.5);
+  --shadow-build-2: 0 18px 36px rgba(0, 0, 0, 0.55), 0 4px 8px rgba(0, 0, 0, 0.5);
+  --shadow-hud: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* ---- Iso geometry ---- */
+  --tile: 88px;            /* logical tile footprint */
+  --iso-skew: -10deg;
+  --iso-rot: 54deg;        /* base rotation for the iso plane */
+
+  /* ---- Motion ---- */
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- Radii ---- */
+  --r-lg: 22px;
+  --r-md: 16px;
+  --r-sm: 11px;
+
+  color-scheme: dark;
+}
+
+/* ---- DAY THEME OVERRIDES (applied on <body data-time="day">) ---- */
+body[data-time="day"] {
+  --glass-bg: rgba(244, 250, 248, 0.62);
+  --glass-bg-strong: rgba(250, 253, 252, 0.82);
+  --glass-bg-faint: rgba(255, 255, 255, 0.4);
+  --glass-stroke: rgba(10, 30, 25, 0.10);
+  --glass-stroke-bright: rgba(10, 30, 25, 0.18);
+  --text-hi: rgba(12, 26, 22, 0.95);
+  --text-mid: rgba(20, 45, 38, 0.62);
+  --text-lo: rgba(20, 45, 38, 0.40);
+  --sky-top: #aef0d8;
+  --sky-bottom: #7fd6c0;
+  --ground-tint: rgba(180, 230, 200, 0.35);
+  color-scheme: light;
+}

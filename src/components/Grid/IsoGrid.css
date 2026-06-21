@@ -1,0 +1,40 @@
+.iso-surface {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+}
+.iso-surface:active { cursor: grabbing; }
+
+.iso-pan {
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* the 2.5D plane: tilt back + rotate into isometric, keep depth for buildings */
+.iso-plane {
+  display: grid;
+  gap: 3px;
+  transform-style: preserve-3d;
+  transform: rotateX(55deg) rotateZ(45deg);
+}
+
+.iso-hint {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  color: var(--text-mid);
+  pointer-events: none;
+  z-index: 4;
+}
+
+@media (max-width: 720px) {
+  .iso-hint { display: none; }
+}

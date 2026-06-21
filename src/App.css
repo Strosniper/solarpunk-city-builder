@@ -1,0 +1,28 @@
+.app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  /* establish the perspective for the whole 2.5D world */
+  perspective: 1400px;
+  perspective-origin: 50% 38%;
+}
+
+/* soft cinematic vignette over everything */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.45) 100%);
+  z-index: 5;
+}
+
+body[data-time="day"] .vignette {
+  background: radial-gradient(120% 90% at 50% 40%, transparent 60%, rgba(20, 60, 50, 0.18) 100%);
+}
