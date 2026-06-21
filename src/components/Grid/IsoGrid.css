@@ -5,6 +5,7 @@
   place-items: center;
   cursor: grab;
   touch-action: none;
+  overflow: hidden;
 }
 .iso-surface:active { cursor: grabbing; }
 
@@ -13,12 +14,10 @@
   will-change: transform;
 }
 
-/* the 2.5D plane: tilt back + rotate into isometric, keep depth for buildings */
+/* the world plane is now plain 2D positioned space; depth comes from the
+   isometric projection + drawn building faces, not CSS 3D rotation */
 .iso-plane {
-  display: grid;
-  gap: 3px;
-  transform-style: preserve-3d;
-  transform: rotateX(55deg) rotateZ(45deg);
+  position: relative;
 }
 
 .iso-hint {

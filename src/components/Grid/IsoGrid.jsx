@@ -1,16 +1,32 @@
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useMemo } from 'react'
 import { useGame } from '../../game/state/GameContext.jsx'
 import { GRID } from '../../game/config/zones.js'
+import { TW, TH, TOP_PAD, isoPos, originX } from './iso.js'
 import Tile from './Tile.jsx'
 import './IsoGrid.css'
 
-const MIN_SCALE = 0.55
-const MAX_SCALE = 1.7
+const MIN_SCALE = 0.5
+const MAX_SCALE = 1.6
 
 export default function IsoGrid() {
   const { state, dispatch } = useGame()
-  const [view, setView] = useState({ x: 0, y: 0, scale: 0.92 })
+  const [view, setView] = useState({ x: 0, y: -10, scale: 0.95 })
   const drag = useRef(null)
+
+  const ox = originX(GRID.rows)
+  const planeW = ox + (GRID.cols - 1) * (TW / 2) + TW
+  const planeH = TOP_PAD + (GRID.cols - 1 + GRID.rows - 1) * (TH / 2) + TH + 80
+
+  // place every tile and paint back-to-front (smaller x+y first) so nearer
+  // buildings correctly occlude the ones behind them
+  const placed = useMemo(() => {
+    return state.grid
+      .map((tile) => {
+        const { sx, sy } = isoPos(tile.x, tile.y)
+        return { tile, left: ox + sx, top: TOP_PAD + sy, depth: tile.x + tile.y }
+      })
+      .sort((a, b) => a.depth - b.depth)
+  }, [state.grid, ox])
 
   const onPointerDown = useCallback((e) => {
     drag.current = { sx: e.clientX, sy: e.clientY, ox: view.x, oy: view.y, moved: false }
@@ -25,8 +41,8 @@ export default function IsoGrid() {
   }, [])
 
   const onPointerUp = useCallback((e) => {
-    // a click that didn't pan = deselect (clicking empty space)
-    if (drag.current && !drag.current.moved && e.target.classList.contains('iso-surface')) {
+    if (drag.current && !drag.current.moved &&
+      (e.target.classList.contains('iso-surface') || e.target.classList.contains('iso-plane'))) {
       dispatch({ type: 'DESELECT' })
     }
     drag.current = null
@@ -34,7 +50,7 @@ export default function IsoGrid() {
 
   const onWheel = useCallback((e) => {
     setView((v) => {
-      const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, v.scale - e.deltaY * 0.0012))
+      const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, v.scale - e.deltaY * 0.0011))
       return { ...v, scale: next }
     })
   }, [])
@@ -48,18 +64,15 @@ export default function IsoGrid() {
       onPointerLeave={onPointerUp}
       onWheel={onWheel}
     >
-      <div
-        className="iso-pan"
-        style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}
-      >
-        <div
-          className="iso-plane"
-          style={{ gridTemplateColumns: `repeat(${GRID.cols}, var(--tile))` }}
-        >
-          {state.grid.map((tile) => (
+      <div className="iso-pan" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}>
+        <div className="iso-plane" style={{ width: planeW, height: planeH }}>
+          {placed.map(({ tile, left, top, depth }) => (
             <Tile
               key={tile.id}
               tile={tile}
+              left={left}
+              top={top}
+              depth={depth}
               selected={state.selectedTileId === tile.id}
               night={state.time === 'night'}
             />

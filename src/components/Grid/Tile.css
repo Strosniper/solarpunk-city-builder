@@ -1,174 +1,245 @@
+/* =========================================================================
+   2D ISOMETRIC TILE + BUILDING
+   Ground = clipped diamond. Building = 3 clipped iso faces (top/left/right)
+   with façade windows, glossy roofs and per-type roof furniture.
+   ========================================================================= */
 .tile {
-  position: relative;
-  width: var(--tile);
-  height: var(--tile);
-  transform-style: preserve-3d;
+  position: absolute;
   cursor: pointer;
 }
 
-/* ---- ground face ---- */
-.tile-face {
+/* ---------- ground diamond ---------- */
+.ground {
   position: absolute;
   inset: 0;
-  border-radius: 6px;
-  box-shadow: var(--shadow-tile);
-  border: 1px solid rgba(0, 0, 0, 0.35);
-  overflow: hidden;
-  transition: filter 200ms var(--ease-soft), box-shadow 200ms;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  transition: filter 180ms var(--ease-soft);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
-.t-concrete .tile-face { background: var(--t-concrete); }
-.t-asphalt  .tile-face { background: var(--t-asphalt); }
-.t-soil     .tile-face { background: var(--t-soil); }
-.t-prairie  .tile-face { background: var(--t-prairie); }
-.t-river    .tile-face { background: var(--t-river); }
+.tile:hover .ground { filter: brightness(1.12) saturate(1.1); }
 
-.tile:hover .tile-face { filter: brightness(1.18); }
+/* terrain materials — layered gradients give subtle grain/texture */
+.t-concrete {
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255,255,255,0.07), transparent 40%),
+    linear-gradient(150deg, #565b61, #3a3e44 55%, #2c3035);
+}
+.t-asphalt {
+  background:
+    radial-gradient(circle at 60% 40%, rgba(255,255,255,0.05), transparent 45%),
+    linear-gradient(150deg, #41454c, #2b2e34 60%, #20232a);
+}
+.t-soil {
+  background:
+    radial-gradient(circle at 40% 35%, rgba(120,82,48,0.55), transparent 50%),
+    linear-gradient(150deg, #6f4c30, #4d341f 60%, #3a271a);
+}
+.t-prairie {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(150,230,150,0.30), transparent 45%),
+    linear-gradient(150deg, #46915a, #2c6a3c 55%, #1f4f2c);
+}
+.t-river {
+  background:
+    linear-gradient(150deg, #34a7c9, #1f6f95 60%, #15506f);
+}
+/* per-tile micro variation so terrain reads organic, not gridded */
+.v1 { filter: brightness(1.03); } .v2 { filter: brightness(0.97); }
+.v3 { filter: brightness(1.05) hue-rotate(4deg); } .v4 { filter: brightness(0.95); }
+.v5 { filter: brightness(1.02) hue-rotate(-3deg); } .v6 { filter: brightness(0.99); }
 
-/* zone seam tint along the face edge */
-.z-metropolis .tile-face { border-color: rgba(154, 163, 171, 0.25); }
-.z-town .tile-face { border-color: rgba(33, 212, 216, 0.2); }
-.z-prairie .tile-face { border-color: rgba(52, 224, 161, 0.25); }
+.z-metropolis .ground { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3); }
+.z-prairie .ground { box-shadow: inset 0 0 14px rgba(40,120,70,0.3), inset 0 0 0 1px rgba(0,0,0,0.2); }
 
 .soil-veil {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(52, 224, 161, 0.55), rgba(40, 120, 70, 0.15));
+  background: radial-gradient(circle at 50% 50%, rgba(52,224,161,0.6), rgba(40,120,70,0.1));
   mix-blend-mode: screen;
-  transition: opacity 600ms var(--ease-soft);
+  transition: opacity 700ms var(--ease-soft);
 }
 
-.river-shimmer {
+.ripple {
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
-  background-size: 250% 250%;
-  animation: shimmer 5s linear infinite;
+  background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.4) 50%, transparent 65%);
+  background-size: 220% 220%;
+  animation: ripple 4.5s linear infinite;
+  opacity: 0.6;
 }
-@keyframes shimmer {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 200% 200%; }
-}
+@keyframes ripple { 0% { background-position: 0 0; } 100% { background-position: 200% 200%; } }
 
-/* ---- selection ---- */
-.tile.selected .tile-face {
-  border-color: var(--neon-green);
-  box-shadow: 0 0 0 2px var(--neon-green), 0 0 22px rgba(52, 224, 161, 0.6), var(--shadow-tile);
-  filter: brightness(1.25);
-}
-
-/* ---- mesh coverage ring ---- */
-.mesh-ring {
+/* ---------- selection / hover ring ---------- */
+.sel-diamond {
   position: absolute;
-  inset: -2px;
+  inset: -5px;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: var(--neon-green);
+  opacity: 0;
+  transition: opacity 160ms var(--ease-soft);
+  filter: blur(0.5px);
+}
+.tile:hover .sel-diamond { opacity: 0.25; }
+.tile.selected .sel-diamond { opacity: 0.9; box-shadow: 0 0 20px var(--neon-green); }
+
+/* mesh coverage marker on relay tiles */
+.coverage {
+  position: absolute;
+  inset: 6px;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   border: 1.5px dashed;
-  border-radius: 8px;
-  opacity: 0.55;
-  animation: meshPulse 2.4s var(--ease-soft) infinite;
+  opacity: 0.5;
+  animation: cov 2.6s var(--ease-soft) infinite;
 }
-@keyframes meshPulse {
-  0%, 100% { opacity: 0.25; transform: scale(0.96); }
-  50% { opacity: 0.7; transform: scale(1.02); }
-}
+@keyframes cov { 0%,100% { opacity: 0.2; } 50% { opacity: 0.65; } }
 
-/* ============ STRUCTURES (raised in 3D space) ============ */
-/* the lift holds the 3D translateZ so it never collides with framer-motion's
-   transform on the inner .struct (which animates scale/opacity) */
-.struct-lift {
-  position: absolute;
-  inset: 16%;
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-.struct {
+/* ======================= BUILDINGS ======================= */
+.bld-mount {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+}
+/* purely decorative layers shouldn't eat clicks */
+.emit, .sel-diamond, .coverage, .soil-veil, .ripple,
+.tier-tag, .brownout, .mast, .stack, .garden { pointer-events: none; }
+.bld {
+  position: absolute;
+  left: 0;
+  width: 120px;
+  height: calc(60px + var(--bh));
+  /* top set inline to -bh so the base diamond lands on the ground */
+  filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.5));
 }
 
-/* the body fakes vertical mass with stacked shadows */
-.struct-body {
+.face { position: absolute; inset: 0; }
+.f-top   { clip-path: polygon(60px 0, 120px 30px, 60px 60px, 0 30px); }
+.f-left  { clip-path: polygon(0 30px, 60px 60px, 60px calc(60px + var(--bh)), 0 calc(30px + var(--bh))); }
+.f-right { clip-path: polygon(60px 60px, 120px 30px, 120px calc(30px + var(--bh)), 60px calc(60px + var(--bh))); }
+
+/* façade window grid shared by both walls */
+.f-left, .f-right {
+  background-color: var(--wall);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.32) 0 2px, transparent 2px 11px),
+    repeating-linear-gradient(90deg, transparent 0 5px, var(--win) 5px 11px, transparent 11px 16px);
+  background-blend-mode: normal;
+}
+.f-left  { filter: brightness(1.06); }
+.f-right { filter: brightness(0.68); }
+.f-top   { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25); }
+
+/* ---- MESH: slate glass tower, cyan windows, solar roof + antenna ---- */
+.b-mesh   { --wall: #28333c; --win: rgba(43,211,216,0.85); }
+.b-mesh .f-top {
+  background:
+    repeating-linear-gradient(60deg, #1b2a33 0 4px, #223640 4px 8px),
+    linear-gradient(150deg, #2c4450, #18242b);
+}
+/* ---- FORGE: industrial amber block, warm windows, vented metal roof ---- */
+.b-forge  { --wall: #463a26; --win: rgba(255,207,92,0.8); }
+.b-forge .f-top {
+  background:
+    repeating-linear-gradient(0deg, #3a3220 0 5px, #4a4029 5px 7px),
+    linear-gradient(150deg, #5a4c30, #322a1a);
+}
+/* ---- BIOSPHERE: terraced green tower, glass canopy, roof garden ---- */
+.b-biosphere { --wall: #2f5d40; --win: rgba(107,240,192,0.75); }
+.b-biosphere .f-left, .b-biosphere .f-right {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.28) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(90deg, transparent 0 6px, var(--win) 6px 10px, transparent 10px 18px),
+    linear-gradient(0deg, rgba(40,140,80,0.5), transparent 60%);
+}
+.b-biosphere .f-top {
+  background:
+    radial-gradient(circle at 50% 50%, #5fcf86, #2f7d4a 70%),
+    linear-gradient(150deg, #54c07a, #2c6a3c);
+}
+
+/* glossy sheen across the roof of every building */
+.f-top::after {
+  content: '';
   position: absolute;
   inset: 0;
-  border-radius: 7px;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 80%, #fff 10%),
-    color-mix(in srgb, var(--accent) 55%, #0b1410 60%));
-  box-shadow:
-    0 calc(var(--h) * -0.0px) 0 rgba(0, 0, 0, 0.0),
-    0 14px 22px rgba(0, 0, 0, 0.55),
-    0 28px 44px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(0, 0, 0, 0.35);
-}
-
-/* glossy cap / roof garden */
-.struct-cap {
-  position: absolute;
-  inset: 12% 12% 55% 12%;
-  border-radius: 5px;
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.05));
+  clip-path: inherit;
+  background: linear-gradient(150deg, rgba(255,255,255,0.45), rgba(255,255,255,0) 45%);
   mix-blend-mode: overlay;
 }
 
-.struct.glow .struct-body {
-  box-shadow:
-    0 14px 22px rgba(0, 0, 0, 0.55),
-    0 0 18px var(--accent),
-    0 0 34px color-mix(in srgb, var(--accent) 60%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.struct.offline { filter: grayscale(0.85) brightness(0.6); }
-.struct.offline .struct-body { border-color: var(--neon-rose); }
-
-/* counter-rotate so the badge faces the camera, not the tilted plane */
-.struct-label {
+/* ---- roof furniture ---- */
+.mast {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotateZ(-45deg) rotateX(-55deg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1;
-  pointer-events: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  left: 50%; top: -24px;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center;
 }
-.struct-glyph { font-size: 16px; color: #fff; filter: drop-shadow(0 0 4px var(--accent)); }
-.struct-tier {
-  margin-top: 2px;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.45);
-  padding: 1px 5px;
-  border-radius: 6px;
+.mast-line { width: 2px; height: 26px; background: linear-gradient(var(--accent), rgba(255,255,255,0.2)); }
+.mast-blink {
+  position: absolute; top: -3px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: blink 1.6s ease-in-out infinite;
 }
+@keyframes blink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+.stack {
+  position: absolute;
+  left: 58%; top: -8px;
+  width: 9px; height: 18px;
+  background: linear-gradient(#5a4c30, #2c2418);
+  border-radius: 2px 2px 0 0;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.15);
+}
+
+.garden { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); }
+.garden span {
+  position: absolute;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #8df0b6, #2f7d4a);
+  box-shadow: 0 0 6px rgba(52,224,161,0.5);
+}
+.garden span:nth-child(1) { left: -14px; top: 6px; }
+.garden span:nth-child(2) { left: 0; top: 0; }
+.garden span:nth-child(3) { left: 12px; top: 7px; }
+
+/* night glow halo */
+.emit {
+  position: absolute;
+  inset: -40% -20%;
+  background: radial-gradient(circle at 50% 60%, var(--accent), transparent 60%);
+  filter: blur(10px);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  z-index: -1;
+}
+.bld.glow { filter: drop-shadow(0 0 16px var(--accent)) drop-shadow(0 14px 14px rgba(0,0,0,0.5)); }
+.bld.glow .f-left, .bld.glow .f-right { background-color: color-mix(in srgb, var(--wall) 70%, var(--accent) 30%); }
+
+.bld.offline { filter: grayscale(0.85) brightness(0.55) drop-shadow(0 14px 14px rgba(0,0,0,0.5)); }
+
+/* floating tier badge above the roof */
+.tier-tag {
+  position: absolute;
+  left: 50%; top: -40px;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 3px;
+  padding: 2px 7px;
+  border-radius: 9px;
+  background: rgba(8, 12, 15, 0.82);
+  border: 1px solid var(--glass-stroke-bright);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+}
+.tag-glyph { color: var(--accent); font-size: 11px; filter: drop-shadow(0 0 4px var(--accent)); }
+.tag-num { color: #fff; font-size: 11px; font-weight: 800; }
 
 .brownout {
   position: absolute;
-  top: -10px; right: -8px;
-  transform: rotateZ(-45deg) rotateX(-55deg);
-  font-size: 13px;
+  left: 50%; top: -58px;
+  transform: translateX(-50%);
   color: var(--neon-rose);
+  font-size: 14px;
   filter: drop-shadow(0 0 6px var(--neon-rose));
   animation: floatPulse 1.4s infinite;
-}
-
-/* a tiny glowing logistics sprite that runs along the relay tile */
-.logi-sprite {
-  position: absolute;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent), 0 0 14px var(--accent);
-  top: 50%; left: 0;
-  animation: logiRun 2.6s linear infinite;
-}
-@keyframes logiRun {
-  0%   { transform: translate(-4px, -50%) rotateZ(-45deg) rotateX(-55deg); opacity: 0; }
-  15%  { opacity: 1; }
-  85%  { opacity: 1; }
-  100% { transform: translate(var(--tile), -50%) rotateZ(-45deg) rotateX(-55deg); opacity: 0; }
 }

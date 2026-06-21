@@ -2,63 +2,92 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { useGame } from '../../game/state/GameContext.jsx'
 import { tierData, PATHS } from '../../game/config/tiers.js'
+import { TW, TH } from './iso.js'
 import './Tile.css'
 
 const GLYPH = { biosphere: '✿', mesh: '☷', forge: '⬢' }
 
-function Tile({ tile, selected, night }) {
+// body height grows with tier; each path has its own silhouette
+const BODY_H = {
+  biosphere: (t) => 14 + t * 9,
+  mesh: (t) => 24 + t * 12,
+  forge: (t) => 16 + t * 8,
+}
+
+function Building({ pathId, tier, glow, offline }) {
+  const bh = BODY_H[pathId](tier)
+  const accent = PATHS[pathId].accent
+
+  return (
+    <div
+      className={`bld b-${pathId}` + (glow ? ' glow' : '') + (offline ? ' offline' : '')}
+      style={{ '--bh': `${bh}px`, '--accent': accent, top: `-${bh}px` }}
+    >
+      {glow && <div className="emit" />}
+
+      {/* three iso faces (paint order: back walls first, roof last) */}
+      <div className="face f-left" />
+      <div className="face f-right" />
+      <div className="face f-top" />
+
+      {/* path-specific roof furniture */}
+      {pathId === 'mesh' && (
+        <div className="mast"><span className="mast-line" /><span className="mast-blink" /></div>
+      )}
+      {pathId === 'forge' && <div className="stack" />}
+      {pathId === 'biosphere' && (
+        <div className="garden"><span /><span /><span /></div>
+      )}
+
+      <div className="tier-tag">
+        <span className="tag-glyph">{GLYPH[pathId]}</span>
+        <span className="tag-num">{tier}</span>
+      </div>
+      {offline && <div className="brownout">⚠</div>}
+    </div>
+  )
+}
+
+function Tile({ tile, left, top, depth, selected, night }) {
   const { dispatch } = useGame()
   const b = tile.building
   const td = b ? tierData(b.pathId, b.tier) : null
-  const path = b ? PATHS[b.pathId] : null
-  const height = b ? 10 + b.tier * 7 : 0
-  const glowing = night && td && td.glow
+  const glow = night && td && td.glow
   const offline = b && !tile.online
   const isRelay = td && td.isRelay
+
+  // small deterministic jitter so terrain doesn't look like a uniform grid
+  const h = (tile.x * 73 + tile.y * 31) % 7
+  const soilTint = Math.min(0.65, tile.soil / 150)
 
   const onClick = (e) => {
     e.stopPropagation()
     dispatch({ type: 'SELECT_TILE', id: tile.id })
   }
 
-  // soil tint visualises botany progress on hardscape
-  const soilTint = Math.min(0.7, tile.soil / 140)
-
   return (
     <div
-      className={
-        'tile' +
-        ` t-${tile.terrain}` +
-        ` z-${tile.zone}` +
-        (selected ? ' selected' : '')
-      }
+      className={`tile z-${tile.zone}` + (selected ? ' selected' : '')}
+      style={{ left, top, width: TW, height: TH, zIndex: depth + 1 }}
       onClick={onClick}
     >
-      <div className="tile-face">
+      <div className="sel-diamond" />
+      <div className={`ground t-${tile.terrain} v${h}`}>
         <div className="soil-veil" style={{ opacity: soilTint }} />
-        {tile.terrain === 'river' && <div className="river-shimmer" />}
-        {isRelay && !offline && <div className="mesh-ring" style={{ borderColor: path.accent }} />}
+        {tile.terrain === 'river' && <span className="ripple" />}
       </div>
+      {isRelay && !offline && <div className="coverage" style={{ borderColor: PATHS.mesh.accent }} />}
 
       {b && (
-        <div className="struct-lift" style={{ transform: `translateZ(${height}px)`, '--accent': path.accent, '--h': `${height}px` }}>
-          <motion.div
-            key={b.tier}
-            className={'struct' + (offline ? ' offline' : '') + (glowing ? ' glow' : '')}
-            initial={{ scale: 0.4, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-          >
-            <div className="struct-body" />
-            <div className="struct-cap" />
-            <div className="struct-label">
-              <span className="struct-glyph">{GLYPH[b.pathId]}</span>
-              <span className="struct-tier">T{b.tier}</span>
-            </div>
-            {offline && <div className="brownout">⚠</div>}
-            {isRelay && !offline && <span className="logi-sprite" />}
-          </motion.div>
-        </div>
+        <motion.div
+          className="bld-mount"
+          key={b.tier}
+          initial={{ scale: 0.5, opacity: 0, y: 8 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 240, damping: 18 }}
+        >
+          <Building pathId={b.pathId} tier={b.tier} glow={glow} offline={offline} />
+        </motion.div>
       )}
     </div>
   )
