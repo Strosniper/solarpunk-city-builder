@@ -3,49 +3,18 @@ import { motion } from 'framer-motion'
 import { useGame } from '../../game/state/GameContext.jsx'
 import { tierData, PATHS } from '../../game/config/tiers.js'
 import { TW, TH } from './iso.js'
+import Building, { WALL_H } from './Building.jsx'
 import './Tile.css'
 
 const GLYPH = { biosphere: '✿', mesh: '☷', forge: '⬢' }
+const DIAMOND = '60,0 120,30 60,60 0,30'
 
-// body height grows with tier; each path has its own silhouette
-const BODY_H = {
-  biosphere: (t) => 14 + t * 9,
-  mesh: (t) => 24 + t * 12,
-  forge: (t) => 16 + t * 8,
-}
-
-function Building({ pathId, tier, glow, offline }) {
-  const bh = BODY_H[pathId](tier)
-  const accent = PATHS[pathId].accent
-
-  return (
-    <div
-      className={`bld b-${pathId}` + (glow ? ' glow' : '') + (offline ? ' offline' : '')}
-      style={{ '--bh': `${bh}px`, '--accent': accent, top: `-${bh}px` }}
-    >
-      {glow && <div className="emit" />}
-
-      {/* three iso faces (paint order: back walls first, roof last) */}
-      <div className="face f-left" />
-      <div className="face f-right" />
-      <div className="face f-top" />
-
-      {/* path-specific roof furniture */}
-      {pathId === 'mesh' && (
-        <div className="mast"><span className="mast-line" /><span className="mast-blink" /></div>
-      )}
-      {pathId === 'forge' && <div className="stack" />}
-      {pathId === 'biosphere' && (
-        <div className="garden"><span /><span /><span /></div>
-      )}
-
-      <div className="tier-tag">
-        <span className="tag-glyph">{GLYPH[pathId]}</span>
-        <span className="tag-num">{tier}</span>
-      </div>
-      {offline && <div className="brownout">⚠</div>}
-    </div>
-  )
+const TERRAIN = {
+  prairie:  { grad: 'gPrairie',  tex: 'texGrass' },
+  soil:     { grad: 'gSoil',     tex: 'texDirt' },
+  concrete: { grad: 'gConcrete', tex: 'texConcrete' },
+  asphalt:  { grad: 'gAsphalt',  tex: 'texConcrete' },
+  river:    { grad: 'gRiver',    tex: 'texWater' },
 }
 
 function Tile({ tile, left, top, depth, selected, night }) {
@@ -55,10 +24,8 @@ function Tile({ tile, left, top, depth, selected, night }) {
   const glow = night && td && td.glow
   const offline = b && !tile.online
   const isRelay = td && td.isRelay
-
-  // small deterministic jitter so terrain doesn't look like a uniform grid
-  const h = (tile.x * 73 + tile.y * 31) % 7
-  const soilTint = Math.min(0.65, tile.soil / 150)
+  const terrain = TERRAIN[tile.terrain] || TERRAIN.concrete
+  const soilTint = Math.min(0.6, tile.soil / 160)
 
   const onClick = (e) => {
     e.stopPropagation()
@@ -71,22 +38,35 @@ function Tile({ tile, left, top, depth, selected, night }) {
       style={{ left, top, width: TW, height: TH, zIndex: depth + 1 }}
       onClick={onClick}
     >
-      <div className="sel-diamond" />
-      <div className={`ground t-${tile.terrain} v${h}`}>
-        <div className="soil-veil" style={{ opacity: soilTint }} />
-        {tile.terrain === 'river' && <span className="ripple" />}
-      </div>
-      {isRelay && !offline && <div className="coverage" style={{ borderColor: PATHS.mesh.accent }} />}
+      <svg className="ground" viewBox="0 0 120 60" width={TW} height={TH}>
+        <polygon points={DIAMOND} fill={`url(#${terrain.grad})`} filter={`url(#${terrain.tex})`} />
+        {soilTint > 0.02 && <polygon className="soil-veil" points={DIAMOND} fill="#34e0a1" opacity={soilTint} />}
+        {/* top-left highlight edge + bottom-right shaded edge for depth */}
+        <polyline points="0,30 60,0 120,30" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="1" />
+        <polyline points="0,30 60,60 120,30" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
+        <polygon className="sel" points={DIAMOND} fill="none" strokeWidth="3" />
+      </svg>
+
+      {isRelay && !offline && (
+        <svg className="coverage" viewBox="0 0 120 60" width={TW} height={TH}>
+          <polygon className="cov-ring" points="60,4 116,30 60,56 4,30" fill="none" strokeWidth="1.6" strokeDasharray="5 4" />
+        </svg>
+      )}
 
       {b && (
         <motion.div
           className="bld-mount"
           key={b.tier}
-          initial={{ scale: 0.5, opacity: 0, y: 8 }}
+          initial={{ scale: 0.55, opacity: 0, y: 6 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 240, damping: 18 }}
         >
-          <Building pathId={b.pathId} tier={b.tier} glow={glow} offline={offline} />
+          <Building pathId={b.pathId} tier={b.tier} uid={tile.id.replace('_', '')} glow={glow} offline={offline} />
+          <div className="tier-tag" style={{ '--accent': PATHS[b.pathId].accent, top: `calc(-${WALL_H[b.pathId](b.tier)}px - 16px)` }}>
+            <span className="tag-glyph">{GLYPH[b.pathId]}</span>
+            <span className="tag-num">{b.tier}</span>
+          </div>
+          {offline && <div className="brownout" style={{ top: `calc(-${WALL_H[b.pathId](b.tier)}px - 36px)` }}>⚠</div>}
         </motion.div>
       )}
     </div>

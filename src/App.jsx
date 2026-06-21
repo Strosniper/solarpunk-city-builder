@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useGame } from './game/state/GameContext.jsx'
 import TopResourceBar from './components/Hud/TopResourceBar.jsx'
 import IsoGrid from './components/Grid/IsoGrid.jsx'
+import IsoDefs from './components/Grid/IsoDefs.jsx'
 import ContextualActionDock from './components/Dock/ContextualActionDock.jsx'
 import SystemDock from './components/Hud/SystemDock.jsx'
 import FinancePanel from './components/Panels/FinancePanel.jsx'
@@ -14,6 +15,7 @@ export default function App() {
 
   return (
     <div className="app" data-time={state.time}>
+      <IsoDefs />
       <Particles />
       <TopResourceBar />
       <SystemDock onOpenFinance={() => setFinanceOpen(true)} />

@@ -12,13 +12,18 @@
   --neon-rose: #ff6b8b;
   --neon-violet: #9a6bff;
 
-  /* ---- Matte glass surfaces (dark mode default) ---- */
-  --glass-bg: rgba(15, 20, 25, 0.70);
-  --glass-bg-strong: rgba(12, 16, 20, 0.86);
-  --glass-bg-faint: rgba(22, 28, 34, 0.45);
-  --glass-stroke: rgba(255, 255, 255, 0.08);
-  --glass-stroke-bright: rgba(255, 255, 255, 0.16);
-  --glass-blur: 14px;
+  /* ---- Frosted glass surfaces ---- */
+  --glass-bg: rgba(255, 255, 255, 0.10);
+  --glass-bg-strong: rgba(20, 28, 36, 0.55);
+  --glass-bg-faint: rgba(255, 255, 255, 0.06);
+  --glass-stroke: rgba(255, 255, 255, 0.14);
+  --glass-stroke-bright: rgba(255, 255, 255, 0.28);
+  --glass-blur: 20px;
+  /* glowing inner border that makes panels pop off the scene */
+  --glass-glow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.10),
+    0 18px 50px rgba(0, 0, 0, 0.55);
 
   /* ---- Text ---- */
   --text-hi: rgba(255, 255, 255, 0.95);
